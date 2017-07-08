@@ -11,12 +11,13 @@ QUOTAS = (
 )
 
 
-# TODO - There's a bug in here somewhere
+# TODO - There's a "bug" in here somewhere
 def get_factor_weights(quotas, counts):
     factors = []
     for (q2, q4), quota_size in quotas:
         count = counts.loc[(q2, q4)]
-        factor = 1 
+        factor = quota_size/count
+        print(factor)
         factors.append(((q2, q4), factor))
     return factors
 
