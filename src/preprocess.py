@@ -8,6 +8,7 @@ def load_data(filename):
     else:
         return pd.read_hdf(filename, key='df')
 
+# Load the specified file as a series (squeeze), then name it q3 so it's easy to merge.
 def load_series(filename):
     return pd.read_csv(filename, index_col=0, squeeze=True, names=["q3"])
 
@@ -22,24 +23,28 @@ def save_dataframe(dataset, filename):
     except IOError:
         print("<Error writing file> Is it already open?")
 
-# Merge new data into the existing dataframe
+# Merge new data into the existing dataframe by appending columns, not rows.
 def merge_new(dataset, new_column):
-    return dataset.join(new_column)
+    return pd.concat([dataset, new_column], axis=1)
 
 def main():
+    # Borrowing this from the code you sent me
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('dfname', help='Path to a dataframe CSV or HDF file')
     parser.add_argument('seriesname', help='Path to a series CSV file')
     args = parser.parse_args()
 
+    #Load main table, drop the duplicates, then drop the NaNs
     df = load_data(args.dfname)
     df = drop_duplicates(df)
     df = df.dropna(subset=['q2', 'q4'])
-    q3 = load_series(args.seriesname)
-    df = pd.concat([df, q3], axis=1)
 
-    # Validate that the data structures were merged properly
+    #Load the q3 series and add it to the main dataframe
+    q3 = load_series(args.seriesname)
+    df = merge_new(df, q3)
+
+    # Validate that the data structures were merged completely before saving
     if(df.q3.count() == q3.count()):
         save_dataframe(df, "complete.csv")
         print("Done!")
